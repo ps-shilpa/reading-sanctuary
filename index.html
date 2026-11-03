@@ -1,481 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#d97706">
-    <title>Reading & Vocabulary Sanctuary</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        parchment: {
-                            50: '#fffbeb',
-                            100: '#fef3c7',
-                            200: '#fde68a',
-                            800: '#78350f',
-                            900: '#451a03',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
-        .font-serif-title { font-family: 'Cinzel', serif; }
-        .font-serif-body { font-family: 'Lora', serif; }
-        .font-sans-ui { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
-</head>
-<body class="bg-amber-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans-ui min-h-screen flex flex-col transition-colors duration-200">
-
-    <!-- Header Navigation -->
-    <header class="sticky top-0 z-40 backdrop-blur-md bg-amber-50/80 dark:bg-zinc-950/80 border-b border-amber-200/60 dark:border-zinc-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-600/20">
-                    <i class="fa-solid fa-book-bookmark text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="font-serif-title text-lg sm:text-xl font-bold tracking-tight text-amber-950 dark:text-amber-100">Sanctuary</h1>
-                    <p class="text-[11px] text-amber-700/80 dark:text-amber-400/80 font-medium">Reading & Vocabulary Tracker</p>
-                </div>
-            </div>
-
-            <!-- Global Action Controls -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button onclick="openAddModal()" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm transition-all transform active:scale-95">
-                    <i class="fa-solid fa-plus"></i>
-                    <span class="hidden sm:inline">Add Item</span>
-                </button>
-                <div class="h-6 w-px bg-amber-200 dark:bg-zinc-800 mx-1"></div>
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl text-amber-900 dark:text-amber-100 hover:bg-amber-200/50 dark:hover:bg-zinc-800 transition-colors" title="Toggle Theme">
-                    <i class="fa-solid fa-moon dark:hidden text-sm"></i>
-                    <i class="fa-solid fa-sun hidden dark:inline text-sm"></i>
-                </button>
-                <button onclick="exportData()" class="p-2.5 rounded-xl text-amber-900 dark:text-amber-100 hover:bg-amber-200/50 dark:hover:bg-zinc-800 transition-colors" title="Export Backup JSON">
-                    <i class="fa-solid fa-download text-sm"></i>
-                </button>
-                <button id="gdrive-sync-btn" onclick="toggleDriveSync()" class="p-2 py-1.5 rounded-xl border border-amber-300 dark:border-zinc-700 text-amber-900 dark:text-amber-100 hover:bg-amber-200/50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5 text-xs font-semibold">
-                    <i class="fa-brands fa-google-drive text-amber-600 dark:text-amber-400" id="gdrive-icon"></i>
-                    <span id="gdrive-status-text" class="hidden sm:inline">Sync</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
-
-        <!-- Quick Stats Overview Bar -->
-        <section class="grid grid-cols-3 gap-3 sm:gap-4">
-            <div class="p-4 rounded-2xl bg-white/70 dark:bg-zinc-900/70 border border-amber-200/50 dark:border-zinc-800/80 shadow-sm backdrop-blur-sm">
-                <span class="text-xs text-amber-800/70 dark:text-zinc-400 font-medium">Quotes Saved</span>
-                <p id="stat-quotes-count" class="text-2xl sm:text-3xl font-bold text-amber-950 dark:text-amber-100 mt-1">0</p>
-            </div>
-            <div class="p-4 rounded-2xl bg-white/70 dark:bg-zinc-900/70 border border-amber-200/50 dark:border-zinc-800/80 shadow-sm backdrop-blur-sm">
-                <span class="text-xs text-amber-800/70 dark:text-zinc-400 font-medium">Vocabulary Words</span>
-                <p id="stat-vocab-count" class="text-2xl sm:text-3xl font-bold text-amber-950 dark:text-amber-100 mt-1">0</p>
-            </div>
-            <div class="p-4 rounded-2xl bg-white/70 dark:bg-zinc-900/70 border border-amber-200/50 dark:border-zinc-800/80 shadow-sm backdrop-blur-sm">
-                <span class="text-xs text-amber-800/70 dark:text-zinc-400 font-medium">Books Tracked</span>
-                <p id="stat-books-count" class="text-2xl sm:text-3xl font-bold text-amber-950 dark:text-amber-100 mt-1">0</p>
-            </div>
-        </section>
-
-        <!-- Filters & View Options -->
-        <section class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-            <!-- Tabs -->
-            <div class="flex items-center p-1 bg-amber-100/70 dark:bg-zinc-900 rounded-xl border border-amber-200/60 dark:border-zinc-800 self-start sm:self-auto">
-                <button onclick="setActiveTab('all')" id="tab-all" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white dark:bg-zinc-800 shadow-sm text-amber-950 dark:text-white">All</button>
-                <button onclick="setActiveTab('quotes')" id="tab-quotes" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-amber-800 dark:text-zinc-400 hover:text-amber-950 transition-all">Quotes</button>
-                <button onclick="setActiveTab('vocab')" id="tab-vocab" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-amber-800 dark:text-zinc-400 hover:text-amber-950 transition-all">Vocabulary</button>
-            </div>
-
-            <!-- Search and Dropdowns -->
-            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1 sm:max-w-xl">
-                <div class="relative flex-1 min-w-[180px]">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-amber-700/50 dark:text-zinc-500"></i>
-                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Search quotes, words, books..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white/80 dark:bg-zinc-900 border border-amber-200/60 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-amber-950 dark:text-zinc-100 placeholder-amber-900/40 dark:placeholder-zinc-500">
-                </div>
-                <select id="book-filter" onchange="handleBookFilter()" class="py-1.5 px-3 text-xs rounded-xl bg-white/80 dark:bg-zinc-900 border border-amber-200/60 dark:border-zinc-800 text-amber-950 dark:text-zinc-200 focus:outline-none">
-                    <option value="all">All Books</option>
-                </select>
-            </div>
-        </section>
-
-        <!-- Cards Display Area -->
-        <section id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
-            <!-- Rendered Dynamically -->
-        </section>
-
-    </main>
-
-    <!-- Add Item Modal -->
-    <div id="add-modal" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-amber-50 dark:bg-zinc-900 rounded-2xl border border-amber-200 dark:border-zinc-800 max-w-lg w-full p-6 shadow-2xl relative">
-            <button onclick="closeAddModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            <h3 class="font-serif-title font-bold text-lg text-amber-950 dark:text-white mb-4">Add Entry</h3>
-
-            <form onsubmit="handleFormSubmit(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-amber-900 dark:text-zinc-300 mb-1">Entry Type</label>
-                    <select id="entry-type" onchange="toggleFormFields()" class="w-full text-xs p-2.5 rounded-xl border border-amber-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-950 dark:text-zinc-100">
-                        <option value="quote">Quote / Excerpt</option>
-                        <option value="vocab">Vocabulary Word</option>
-                    </select>
-                </div>
-
-                <div id="field-word-container" class="hidden">
-                    <label class="block text-xs font-semibold text-amber-900 dark:text-zinc-300 mb-1">Word</label>
-                    <input type="text" id="input-word" placeholder="e.g. Mellifluous" class="w-full text-xs p-2.5 rounded-xl border border-amber-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-950 dark:text-zinc-100">
-                </div>
-
-                <div>
-                    <label id="label-content" class="block text-xs font-semibold text-amber-900 dark:text-zinc-300 mb-1">Quote</label>
-                    <textarea id="input-content" rows="3" placeholder="Enter quote or context sentence..." class="w-full text-xs p-2.5 rounded-xl border border-amber-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-950 dark:text-zinc-100"></textarea>
-                </div>
-
-                <div id="field-def-container" class="hidden">
-                    <label class="block text-xs font-semibold text-amber-900 dark:text-zinc-300 mb-1">Definition (Optional if distinct)</label>
-                    <textarea id="input-def" rows="2" placeholder="Enter clear definition..." class="w-full text-xs p-2.5 rounded-xl border border-amber-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-950 dark:text-zinc-100"></textarea>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-amber-900 dark:text-zinc-300 mb-1">Book Title</label>
-                        <input type="text" id="input-book" placeholder="Book name" class="w-full text-xs p-2.5 rounded-xl border border-amber-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-950 dark:text-zinc-100">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-amber-900 dark:text-zinc-300 mb-1">Page #</label>
-                        <input type="number" id="input-page" placeholder="e.g. 56" class="w-full text-xs p-2.5 rounded-xl border border-amber-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-amber-950 dark:text-zinc-100">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-amber-900 dark:text-zinc-400 hover:bg-amber-100 dark:hover:bg-zinc-800">Cancel</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-sm">Save Entry</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Application Script -->
-    <script>
-        // State
-        let quotesList = [];
-        let vocabList = [];
-        let activeTab = 'all';
-        let searchQuery = '';
-        let currentBookFilter = 'all';
-        let gdriveConnected = false;
-
-        // Sample Data Initialization from User's Notebook
-        const initialQuotes = [
-            { id: 'q1', book: 'Atmosphere', author: 'Taylor Jenkins Reid', page: 36, quote: 'Detached. Effortless. Aloof.', addedAt: 1 },
-            { id: 'q2', book: 'Atmosphere', author: 'Taylor Jenkins Reid', page: 53, quote: 'Bravery is being unafraid of something other people are afraid of. Courage is being afraid, but strong enough to do it anyway.', addedAt: 2 },
-            { id: 'q3', book: 'Atmosphere', author: 'Taylor Jenkins Reid', page: 56, quote: 'Beauty of pale pink puffs - soft blankets against the sky', addedAt: 3 },
-            { id: 'q4', book: 'Onyx Storm', author: 'Rebecca Yarros', page: 4, quote: 'I am as unknown as he is, and you still trust me... I will not be another battle you have to fight.', addedAt: 4 },
-            { id: 'q5', book: 'Onyx Storm', author: 'Rebecca Yarros', page: 201, quote: 'Lifetime. Anything less is unacceptable.', addedAt: 5 },
-            { id: 'q6', book: 'The Palace of Illusions', author: 'Chitra Banerjee Divakaruni', page: 201, quote: 'A situation in itself is neither happy nor unhappy. It’s only your response to it that causes your sorrow.', addedAt: 6 }
-        ];
-
-        const initialVocab = [
-            { id: 'v1', word: 'Surreptitiously', context: 'To do something in a secret, stealthy, or stealthful manner, typically because it would not be approved of if known.', definition: '', book: 'General Discovery', page: null },
-            { id: 'v2', word: 'Lilting', context: 'Describing a manner of speaking, singing, or moving that has a rising and falling rhythm or a pleasant cadence.', definition: '', book: 'General Discovery', page: null }
-        ];
-
-        // Load or Init Data
-        function initData() {
-            const stored = localStorage.getItem('sanctuary_data');
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    quotesList = parsed.quotesList || initialQuotes;
-                    vocabList = parsed.vocabList || initialVocab;
-                } catch(e) {
-                    quotesList = initialQuotes;
-                    vocabList = initialVocab;
-                }
-            } else {
-                quotesList = initialQuotes;
-                vocabList = initialVocab;
-            }
-            populateBookFilter();
-            renderCards();
-            updateDashboardStats();
-        }
-
-        function saveData() {
-            localStorage.setItem('sanctuary_data', JSON.stringify({ quotesList, vocabList }));
-            updateDashboardStats();
-            populateBookFilter();
-        }
-
-        function updateDashboardStats() {
-            document.getElementById('stat-quotes-count').innerText = quotesList.length;
-            document.getElementById('stat-vocab-count').innerText = vocabList.length;
-            const books = new Set([...quotesList.map(q => q.book), ...vocabList.map(v => v.book)].filter(Boolean));
-            document.getElementById('stat-books-count').innerText = books.size;
-        }
-
-        function populateBookFilter() {
-            const select = document.getElementById('book-filter');
-            const books = Array.from(new Set([...quotesList.map(q => q.book), ...vocabList.map(v => v.book)].filter(Boolean)));
-            select.innerHTML = '<option value="all">All Books</option>' + books.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
-            select.value = currentBookFilter;
-        }
-
-        // Sorting Logic: Page Order Ascending -> Then Added Order
-        function getSortedQuotes() {
-            return [...quotesList].sort((a, b) => {
-                const pageA = a.page !== null && a.page !== undefined && a.page !== '' ? Number(a.page) : null;
-                const pageB = b.page !== null && b.page !== undefined && b.page !== '' ? Number(b.page) : null;
-
-                if (pageA !== null && pageB !== null) return pageA - pageB;
-                if (pageA !== null) return -1;
-                if (pageB !== null) return 1;
-                return (a.addedAt || 0) - (b.addedAt || 0);
-            });
-        }
-
-        // Render Cards View
-        function renderCards() {
-            const container = document.getElementById('cards-container');
-            let html = '';
-
-            const isQuotes = activeTab === 'all' || activeTab === 'quotes';
-            const isVocab = activeTab === 'all' || activeTab === 'vocab';
-
-            // Filter & Render Quotes
-            if (isQuotes) {
-                const sortedQuotes = getSortedQuotes();
-                sortedQuotes.forEach(q => {
-                    if (currentBookFilter !== 'all' && q.book !== currentBookFilter) return;
-                    if (searchQuery && !q.quote.toLowerCase().includes(searchQuery) && !q.book.toLowerCase().includes(searchQuery)) return;
-
-                    html += `
-                        <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-amber-200/60 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative group">
-                            <div class="flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-semibold mb-2">
-                                <span><i class="fa-solid fa-quote-left mr-1.5 opacity-70"></i>Quote</span>
-                                ${q.page ? `<span class="bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-md text-[11px]">Pg ${escapeHtml(q.page)}</span>` : ''}
-                            </div>
-                            <blockquote class="font-serif-body text-sm sm:text-base text-zinc-800 dark:text-zinc-200 leading-relaxed italic mb-4">
-                                "${escapeHtml(q.quote)}"
-                            </blockquote>
-                            <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-2 border-t border-amber-100 dark:border-zinc-800">
-                                <span class="font-medium text-amber-900 dark:text-zinc-300">${escapeHtml(q.book || 'Unknown Source')} ${q.author ? `<span class="text-zinc-400 font-normal">by ${escapeHtml(q.author)}</span>` : ''}</span>
-                                <button onclick="deleteQuote('${q.id}')" class="opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-700 transition-opacity p-1" title="Delete Quote">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            // Filter & Render Vocabulary Cards
-            if (isVocab) {
-                vocabList.forEach(v => {
-                    if (currentBookFilter !== 'all' && v.book !== currentBookFilter) return;
-                    if (searchQuery && !v.word.toLowerCase().includes(searchQuery) && !(v.context && v.context.toLowerCase().includes(searchQuery))) return;
-
-                    const normalizeText = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-                    const normContext = normalizeText(v.context);
-                    const normDef = normalizeText(v.definition);
-
-                    const showDef = Boolean(
-                        v.definition && v.definition.trim() !== '' && normDef !== '' && normDef !== normContext && !normContext.includes(normDef)
-                    );
-
-                    html += `
-                        <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-amber-200/60 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative group">
-                            <div class="flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-semibold mb-2">
-                                <span><i class="fa-solid fa-spell-check mr-1.5 opacity-70"></i>Vocabulary</span>
-                                ${v.page ? `<span class="bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-md text-[11px]">Pg ${escapeHtml(v.page)}</span>` : ''}
-                            </div>
-                            <h4 class="font-serif-title font-bold text-lg text-amber-950 dark:text-amber-100 mb-2">${escapeHtml(v.word)}</h4>
-                            ${v.context ? `
-                                <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-zinc-800/60 border border-amber-100 dark:border-zinc-700/60 font-serif-body text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 italic mb-3">
-                                    "${escapeHtml(v.context.replace(/^["']|["']$/g, ''))}"
-                                </div>
-                            ` : ''}
-                            ${showDef ? `<p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mb-3">${escapeHtml(v.definition)}</p>` : ''}
-                            <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-2 border-t border-amber-100 dark:border-zinc-800">
-                                <span class="font-medium text-amber-900 dark:text-zinc-300">${escapeHtml(v.book || 'General Discovery')}</span>
-                                <button onclick="deleteVocab('${v.id}')" class="opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-700 transition-opacity p-1" title="Delete Word">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            if (!html) {
-                container.innerHTML = `
-                    <div class="col-span-full py-12 text-center text-zinc-400">
-                        <i class="fa-solid fa-book-open text-3xl mb-2 opacity-50"></i>
-                        <p class="text-sm">No entries found matching your criteria.</p>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = html;
-            }
-        }
-
-        // Action Handlers
-        function setActiveTab(tab) {
-            activeTab = tab;
-            ['all', 'quotes', 'vocab'].forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                if (t === tab) {
-                    btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 shadow-sm text-amber-950 dark:text-white";
-                } else {
-                    btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold text-amber-800 dark:text-zinc-400 hover:text-amber-950 transition-all";
-                }
-            });
-            renderCards();
-        }
-
-        function handleSearch() {
-            searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
-            renderCards();
-        }
-
-        function handleBookFilter() {
-            currentBookFilter = document.getElementById('book-filter').value;
-            renderCards();
-        }
-
-        function openAddModal() {
-            document.getElementById('add-modal').classList.remove('hidden');
-            document.getElementById('add-modal').classList.add('flex');
-            toggleFormFields();
-        }
-
-        function closeAddModal() {
-            document.getElementById('add-modal').classList.add('hidden');
-            document.getElementById('add-modal').classList.remove('flex');
-        }
-
-        function toggleFormFields() {
-            const type = document.getElementById('entry-type').value;
-            const wordContainer = document.getElementById('field-word-container');
-            const defContainer = document.getElementById('field-def-container');
-            const labelContent = document.getElementById('label-content');
-
-            if (type === 'vocab') {
-                wordContainer.classList.remove('hidden');
-                defContainer.classList.remove('hidden');
-                labelContent.innerText = 'Context Sentence / Usage Quote';
-            } else {
-                wordContainer.classList.add('hidden');
-                defContainer.classList.add('hidden');
-                labelContent.innerText = 'Quote Excerpt';
-            }
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const type = document.getElementById('entry-type').value;
-            const book = document.getElementById('input-book').value.trim() || 'General Discovery';
-            const page = document.getElementById('input-page').value ? Number(document.getElementById('input-page').value) : null;
-            const content = document.getElementById('input-content').value.trim();
-
-            if (!content) return;
-
-            if (type === 'quote') {
-                quotesList.push({
-                    id: 'q_' + Date.now(),
-                    book,
-                    author: '',
-                    page,
-                    quote: content,
-                    addedAt: Date.now()
-                });
-            } else {
-                const word = document.getElementById('input-word').value.trim() || 'Word';
-                const def = document.getElementById('input-def').value.trim();
-                vocabList.push({
-                    id: 'v_' + Date.now(),
-                    word,
-                    context: content,
-                    definition: def,
-                    book,
-                    page
-                });
-            }
-
-            saveData();
-            renderCards();
-            closeAddModal();
-            // Clear inputs
-            document.getElementById('input-content').value = '';
-            document.getElementById('input-word').value = '';
-            document.getElementById('input-def').value = '';
-        }
-
-        function deleteQuote(id) {
-            quotesList = quotesList.filter(q => q.id !== id);
-            saveData();
-            renderCards();
-        }
-
-        function deleteVocab(id) {
-            vocabList = vocabList.filter(v => v.id !== id);
-            saveData();
-            renderCards();
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ quotesList, vocabList }, null, 2));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", "reading_sanctuary_backup.json");
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-        }
-
-        function toggleDriveSync() {
-            gdriveConnected = !gdriveConnected;
-            const icon = document.getElementById('gdrive-icon');
-            const text = document.getElementById('gdrive-status-text');
-            if (gdriveConnected) {
-                icon.className = "fa-brands fa-google-drive text-emerald-500 text-xs";
-                text.innerText = "Synced";
-            } else {
-                icon.className = "fa-brands fa-google-drive text-amber-600 dark:text-amber-400 text-xs";
-                text.innerText = "Sync";
-            }
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        // Init App
-        initData();
-    </script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f5d50"><title>Reading Sanctuary</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ebe3;--card:#f6f7f1;--ink:#1d2a25;--mut:#66736b;--acc:#2f5d50;--rib:#b8862b;--line:#d3d9cc;--on:#fff;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2521;--ink:#e6ece6;--mut:#8fa196;--acc:#7fb8a4;--rib:#d4a64a;--line:#2b3a34;--on:#10201a;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;padding:env(safe-area-inset-top) 0 calc(84px + env(safe-area-inset-bottom))}
+#app{max-width:760px;margin:auto;padding:0 16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 0 10px}
+h1{font:600 1.7rem Newsreader,Georgia,serif;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+#sy{font-size:.78rem;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 16px}
+.stats div{background:var(--card);border-radius:12px;padding:10px;text-align:center}
+.stats b{display:block;font:600 1.6rem Newsreader,serif;color:var(--acc)}.stats span{font-size:.75rem;color:var(--mut)}
+.hero{position:relative;background:var(--acc);color:var(--on);border-radius:6px 22px 6px 22px;padding:26px 24px 20px;margin-bottom:18px}
+.hero:before{content:"";position:absolute;top:0;right:26px;width:18px;height:46px;background:var(--rib);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
+.hero p{font:italic 400 1.45rem/1.4 Newsreader,Georgia,serif;margin:0 0 12px;padding-right:26px}
+.hero cite{font-size:.85rem;opacity:.85}.hero button{display:block;margin-top:14px;color:var(--on);opacity:.85;font-size:.85rem}
+h2{font:600 1.15rem Newsreader,serif;margin:20px 0 8px}
+.card{background:var(--card);border-radius:14px 14px 14px 4px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--line)}
+.card:active{border-left-color:var(--rib)}
+.wh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.wh h3{font:600 1.35rem Newsreader,serif;margin:0}
+.ph{color:var(--mut);font-size:.9rem;flex:1}.ic{font-size:1.1rem;color:var(--rib);padding:2px 6px}
+.mn{margin:6px 0 0}.mn i{color:var(--acc);margin-right:4px}.mn small{color:var(--mut)}
+.ctx{font:italic 1rem Newsreader,serif;margin:8px 0 0;color:var(--mut)}
+.meta{font-size:.8rem;color:var(--mut);margin-top:8px}
+.qc p{font:400 1.2rem/1.5 Newsreader,Georgia,serif;margin:0}.act{display:flex;gap:4px;margin-top:6px}
+.hid .ans{display:none}.hid.show .ans{display:block}
+.tb{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.tb input,.tb select,.f input,.f select,.f textarea{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+.tb input{flex:1 1 180px;width:auto}.tb select{width:auto;flex:0 1 160px}
+.chip{border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:.85rem}.chip.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--rib)}
+.bt{display:flex;justify-content:space-between;gap:8px}.bt h3{font:600 1.2rem Newsreader,serif;margin:0}
+.tag{font-size:.75rem;background:var(--bg);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.empty{color:var(--mut);text-align:center;padding:28px 10px;border:1px dashed var(--line);border-radius:14px}
+#nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:4px;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+#nav button{flex:1;max-width:150px;padding:8px 4px;border-radius:12px;color:var(--mut);font-size:.8rem}#nav button.on{background:var(--bg);color:var(--acc);font-weight:600}
+#nav b{display:block;font-size:1.2rem;line-height:1.2}
+#fab{position:fixed;right:18px;bottom:calc(78px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;background:var(--rib);color:#fff;font-size:2rem;line-height:1;box-shadow:0 4px 14px #0004}
+#m:empty{display:none}#m{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}@media(prefers-reduced-motion:reduce){.sheet{animation:none}}
+.f label{display:block;font-size:.82rem;color:var(--mut);margin:10px 0 3px}.f textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:8px;margin-top:16px}.row button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line)}.row .p{background:var(--acc);color:var(--on);border-color:var(--acc)}.row .d{flex:0 0 auto;color:#b3402f}
+:focus-visible{outline:2px solid var(--rib);outline-offset:2px}
+</style></head><body>
+<div id="app"><header><h1>Reading Sanctuary</h1><button id="sy" onclick="syncBtn()">Not synced</button></header><main id="v"></main></div>
+<nav id="nav"></nav><button id="fab" onclick="addNew()" aria-label="Add">+</button><div id="m"></div>
+<script src="https://accounts.google.com/gsi/client" async defer onload="sync()"></script>
+<script>
+// Paste your Google OAuth Client ID here (or enter it in the app when asked).
+const CLIENT_ID='PASTE_YOUR_CLIENT_ID_HERE', FILE='reading-sanctuary.json';
+const $=s=>document.querySelector(s),L=localStorage,now=()=>Date.now(),uid=()=>Math.random().toString(36).slice(2,9)+now().toString(36);
+const K={book:'books',word:'words',quote:'quotes'};
+let db=JSON.parse(L.rs_db||'{"books":[],"words":[],"quotes":[]}'),tab='home',q='',fb='',sf='',prac=0,qi=Math.floor(Math.random()*999),wi=Math.floor(Math.random()*999),fid=L.rs_fid||'',tok=null,busy=0,st;
+const live=k=>db[k].filter(x=>!x.del).sort((a,b)=>b.u-a.u);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const find=(k,id)=>db[k].find(x=>x.id==id);
+const meta=x=>`${x.page?'p. '+esc(x.page)+' · ':''}<b>${esc(x.book)}</b>${x.author?' — '+esc(x.author):''}`;
+const empty=t=>`<div class="empty">${t}</div>`;
+const cid=()=>L.rs_cid||CLIENT_ID;
+function save(){L.rs_db=JSON.stringify(db);L.rs_dirty=1;render();clearTimeout(st);st=setTimeout(()=>sync(),1200)}
+function merge(a,b){const o={};for(const k of['books','words','quotes']){const m=new Map();[...(a[k]||[]),...(b[k]||[])].forEach(x=>{const y=m.get(x.id);if(!y||x.u>y.u)m.set(x.id,x)});o[k]=[...m.values()]}return o}
+/* ---------- Google Drive sync ---------- */
+function auth(i){return new Promise((ok,no)=>{
+ if(tok&&tok.exp>now()+6e4)return ok(tok.t);
+ if(!window.google||!cid()||cid().startsWith('PASTE'))return no('setup');
+ google.accounts.oauth2.initTokenClient({client_id:cid(),scope:'https://www.googleapis.com/auth/drive.file',
+  callback:r=>{if(r.error)return no(r.error);tok={t:r.access_token,exp:now()+r.expires_in*1e3};ok(tok.t)},error_callback:e=>no(e.type)}).requestAccessToken({prompt:i?'':'none'})})}
+const stat=s=>$('#sy').textContent=s;
+async function sync(i){
+ if(busy||!navigator.onLine||(!i&&!L.rs_linked))return;busy=1;stat('Syncing…');
+ try{const H={Authorization:'Bearer '+await auth(i)},API='https://www.googleapis.com/';
+  if(!fid){const r=await(await fetch(API+'drive/v3/files?fields=files(id)&q='+encodeURIComponent(`name='${FILE}' and trashed=false`),{headers:H})).json();fid=r.files?.[0]?.id||''}
+  if(fid){const r=await fetch(API+`drive/v3/files/${fid}?alt=media`,{headers:H});
+   if(r.status==404)fid='';else if(r.ok){db=merge(db,await r.json());L.rs_db=JSON.stringify(db)}}
+  if(!fid||L.rs_dirty){const body=JSON.stringify(db);
+   if(fid)await fetch(API+`upload/drive/v3/files/${fid}?uploadType=media`,{method:'PATCH',headers:{...H,'Content-Type':'application/json'},body});
+   else{const b='rsb',r=await(await fetch(API+'upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{...H,'Content-Type':'multipart/related; boundary='+b},
+    body:`--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({name:FILE})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${b}--`})).json();fid=r.id}
+   L.rs_dirty=''}
+  L.rs_fid=fid;L.rs_linked=1;stat('Synced '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));render();pending()
+ }catch(e){stat(e=='setup'?'Connect Drive':'Offline · tap to retry')}busy=0}
+function syncBtn(){cid()&&!cid().startsWith('PASTE')?sync(1):setup()}
+function setup(){modal(`<h2>Connect Google Drive</h2><p>Paste the OAuth Client ID from Google Cloud Console (Web application, with this site's address as an authorized JavaScript origin).</p><div class=f><input id=cidv placeholder="1234-abc.apps.googleusercontent.com"></div><div class=row><button onclick="closeM()">Cancel</button><button class=p onclick="L.rs_cid=$('#cidv').value.trim();closeM();sync(1)">Connect</button></div>`)}
+/* ---------- Meaning lookup (free dictionary API) ---------- */
+async function define(w){
+ try{const r=await fetch('https://api.dictionaryapi.dev/v2/entries/en/'+encodeURIComponent(w.word.trim().toLowerCase()));if(!r.ok)throw 0;
+  const d=(await r.json())[0];w.meaning=d.meanings.slice(0,2).map(m=>({p:m.partOfSpeech,d:m.definitions[0].definition,e:m.definitions[0].example||''}));
+  w.ph=d.phonetic||(d.phonetics||[]).find(p=>p.text)?.text||'';w.nf=0}
+ catch(e){if(!navigator.onLine)return;w.nf=1}w.u=now()}
+async function pending(){const a=live('words').filter(w=>!w.meaning&&!w.nf);if(!a.length)return;for(const w of a)await define(w);save()}
+async function retry(id){const w=find('words',id);w.nf=0;render();await define(w);save()}
+const say=id=>speechSynthesis.speak(new SpeechSynthesisUtterance(find('words',id).word));
+/* ---------- Views ---------- */
+const mean=x=>x.meaning?.length?x.meaning.map(m=>`<p class=mn><i>${esc(m.p)}</i>${esc(m.d)}${m.e?`<br><small>e.g. “${esc(m.e)}”</small>`:''}</p>`).join(''):x.nf?`<p class=mn>No meaning found. <a href=# onclick="event.stopPropagation();retry('${x.id}');return false">Try again</a></p>`:'<p class=mn>Looking up the meaning…</p>';
+const stars=n=>n?'★'.repeat(n)+'☆'.repeat(5-n):'';
+const SL={want:'To read',reading:'Reading',done:'Finished'};
+function wcard(x,p){const oc=p?`this.classList.toggle('show')`:`edit('word','${x.id}')`;
+ return `<article class="card ${p?'hid':''}" onclick="${oc}"><div class=wh><h3>${esc(x.word)}</h3><span class=ph>${esc(x.ph)}</span><button class=ic onclick="event.stopPropagation();say('${x.id}')" aria-label=Pronounce>🔊</button><button class=ic onclick="event.stopPropagation();fav('words','${x.id}')" aria-label=Favourite>${x.fav?'♥':'♡'}</button></div><div class=ans>${mean(x)}${x.context?`<p class=ctx>“${esc(x.context)}”</p>`:''}</div><div class=meta>${meta(x)}</div></article>`}
+const qcard=x=>`<article class="card qc" onclick="edit('quote','${x.id}')"><p>“${esc(x.text)}”</p><div class=meta>${meta(x)}</div><div class=act><button class=ic onclick="event.stopPropagation();fav('quotes','${x.id}')">${x.fav?'♥':'♡'}</button><button class=ic onclick="event.stopPropagation();navigator.clipboard.writeText('“'+find('quotes','${x.id}').text+'” — '+find('quotes','${x.id}').author)">⧉</button></div></article>`;
+function bcard(b){const p=b.total?Math.min(100,Math.round(b.cur/b.total*100)):0;
+ return `<article class=card onclick="edit('book','${b.id}')"><div class=bt><div><h3>${esc(b.title)}</h3><div class=meta>${esc(b.author)}</div></div><span class=tag>${SL[b.st]}</span></div>${b.st=='reading'&&b.total?`<div class=bar><i style="width:${p}%"></i></div><div class=meta>Page ${b.cur||0} of ${b.total} · ${p}%</div>`:''}${b.rate?`<div class=meta style="color:var(--rib)">${stars(b.rate)}</div>`:''}${b.notes?`<div class=ctx>${esc(b.notes.slice(0,140))}</div>`:''}</article>`}
+function lst(){let a=live(K[tab.slice(0,-1)]||tab),s=q.toLowerCase();
+ if(fb)a=a.filter(x=>(x.book||'').toLowerCase()==fb);if(s)a=a.filter(x=>JSON.stringify(x).toLowerCase().includes(s));
+ if(tab=='books'&&sf)a=a.filter(b=>b.st==sf);
+ return a.length?a.map(x=>tab=='books'?bcard(x):tab=='words'?wcard(x,prac):qcard(x)).join(''):empty(q||fb||sf?'Nothing matches. Clear the search or filter.':`Nothing here yet. Tap + to add your first ${tab.slice(0,-1)}.`)}
+function srch(v){q=v;$('#l').innerHTML=lst()}
+function toolbar(){const bk=live('books');
+ return `<div class=tb><input type=search placeholder="Search" value="${esc(q)}" oninput="srch(this.value)">${tab=='books'?['','want','reading','done'].map(s=>`<button class="chip ${sf==s?'on':''}" onclick="sf='${s}';render()">${s?SL[s]:'All'}</button>`).join(''):`<select onchange="fb=this.value;render()"><option value="">All books</option>${bk.map(b=>`<option value="${esc(b.title.toLowerCase())}" ${fb==b.title.toLowerCase()?'selected':''}>${esc(b.title)}</option>`).join('')}</select>`}${tab=='words'?`<button class="chip ${prac?'on':''}" onclick="prac=!prac;render()">Practice</button>`:''}</div><div id=l>${lst()}</div>`}
+function home(){const B=live('books'),W=live('words'),Q=live('quotes'),R=B.filter(b=>b.st=='reading'),qq=Q[qi%Q.length||0],ww=W[wi%W.length||0];
+ return `<div class=stats>${[['Reading',R.length],['Finished',B.filter(b=>b.st=='done').length],['Words',W.length],['Quotes',Q.length]].map(([a,b])=>`<div><b>${b}</b><span>${a}</span></div>`).join('')}</div>
+ ${qq?`<section class=hero><p>“${esc(qq.text)}”</p><cite>${meta(qq)}</cite><button onclick="qi=Math.floor(Math.random()*999);render()">↻ Another quote</button></section>`:empty('Save a quote and it will show up here.')}
+ <h2>Currently reading</h2>${R.length?R.map(bcard).join(''):empty('No book in progress. Add one under Books.')}
+ <h2>Word to revisit</h2>${ww?wcard(ww,1)+`<button class=chip onclick="wi=Math.floor(Math.random()*999);render()">↻ Another word</button>`:empty('Add a word and its meaning appears automatically.')}`}
+function render(){const T=[['home','⌂','Home'],['books','📚','Books'],['words','Aa','Words'],['quotes','❝','Quotes']];
+ $('#nav').innerHTML=T.map(([k,i,n])=>`<button class="${tab==k?'on':''}" onclick="go('${k}')"><b>${i}</b>${n}</button>`).join('');
+ $('#v').innerHTML=tab=='home'?home():toolbar()}
+function go(t){tab=t;q=fb=sf='';prac=0;render();scrollTo(0,0)}
+function fav(k,id){const x=find(k,id);x.fav=!x.fav;x.u=now();save()}
+/* ---------- Add / edit ---------- */
+const F={word:[['word','Word'],['context','Context line (where you met it)','ta'],['page','Page','n'],['book','Book','b'],['author','Author','a']],
+ quote:[['text','Quote','ta'],['page','Page','n'],['book','Book','b'],['author','Author','a']],
+ book:[['title','Title'],['author','Author'],['st','Status','s'],['total','Total pages','n'],['cur','Current page','n'],['rate','Rating','r'],['notes','Notes about this book','ta']]};
+function modal(h){$('#m').innerHTML=`<div class=sheet onclick="event.stopPropagation()">${h}</div>`;$('#m').onclick=closeM}
+const closeM=()=>$('#m').innerHTML='';
+function addNew(){if(tab!='home')return edit(tab.slice(0,-1));modal(`<h2>Add to your sanctuary</h2><div class=row style="flex-direction:column"><button onclick="edit('word')">Word</button><button onclick="edit('quote')">Quote</button><button onclick="edit('book')">Book</button></div>`)}
+function edit(t,id){const o=id?find(K[t],id):{};
+ const fld=([k,l,y])=>{let v=o[k]??(k=='st'?'reading':'');
+  const c=y=='ta'?`<textarea id=f_${k}>${esc(v)}</textarea>`:y=='s'?`<select id=f_${k}>${Object.entries(SL).map(([a,b])=>`<option value=${a} ${v==a?'selected':''}>${b}</option>`).join('')}</select>`:y=='r'?`<select id=f_${k}>${[0,1,2,3,4,5].map(n=>`<option value=${n} ${v==n?'selected':''}>${n?stars(n):'No rating'}</option>`).join('')}</select>`:`<input id=f_${k} value="${esc(v)}" ${y=='n'?'inputmode=numeric':''} ${y=='b'?'list=bl onchange="autoA()"':''}>`;
+  return `<label for=f_${k}>${l}</label>${c}`};
+ modal(`<div class=f><h2>${id?'Edit':'New'} ${t}</h2>${F[t].map(fld).join('')}<datalist id=bl>${live('books').map(b=>`<option value="${esc(b.title)}">`).join('')}</datalist></div><div class=row>${id?`<button class=d onclick="del('${t}','${id}')">Delete</button>`:''}<button onclick="closeM()">Cancel</button><button class=p onclick="commit('${t}','${id||''}')">Save</button></div>`)}
+function autoA(){const b=live('books').find(b=>b.title.toLowerCase()==$('#f_book').value.trim().toLowerCase());if(b&&!$('#f_author').value)$('#f_author').value=b.author}
+async function commit(t,id){const o=id?find(K[t],id):{id:uid()},old=o.word;
+ F[t].forEach(([k])=>o[k]=$('#f_'+k).value.trim());
+ if(!(o.word||o.text||o.title))return $('#f_'+F[t][0][0]).focus();
+ if(t=='book')['total','cur','rate'].forEach(k=>o[k]=+o[k]||0);
+ else if(o.book&&!live('books').some(b=>b.title.toLowerCase()==o.book.toLowerCase()))db.books.push({id:uid(),title:o.book,author:o.author,st:'reading',total:0,cur:0,rate:0,notes:'',u:now()});
+ o.u=now();if(!id)db[K[t]].push(o);closeM();save();
+ if(t=='word'&&(!id||!o.meaning||o.word!=old)){o.meaning=null;o.nf=0;await define(o);save()}}
+function del(t,id){const o=find(K[t],id);o.del=1;o.u=now();closeM();save()}
+/* ---------- Start ---------- */
+render();sync();pending();
+setInterval(()=>sync(),3e4);addEventListener('focus',()=>sync());addEventListener('online',()=>sync());
+document.addEventListener('visibilitychange',()=>!document.hidden&&sync());
+const u=location.href.split('#')[0],mf={name:'Reading Sanctuary',short_name:'Sanctuary',start_url:u,display:'standalone',background_color:'#e8ebe3',theme_color:'#2f5d50',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232f5d50'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle'%3E📖%3C/text%3E%3C/svg%3E",sizes:'any',type:'image/svg+xml'}]};
+document.head.insertAdjacentHTML('beforeend',`<link rel=manifest href="${URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'}))}">`);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
